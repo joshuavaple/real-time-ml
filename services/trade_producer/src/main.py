@@ -1,15 +1,16 @@
 # purpose of this program: reads trade data from Kraken, then writes it to a Kafka topic
 from quixstreams import Application
-from src.kraken_websocket_api import KrakenWebsocketAPI
+# from src.kraken_websocket_api import KrakenWebsocketAPI
 from loguru import logger
 from typing import List
-from src.kraken_websocket_api import Trade
+from src.trade_data_source import Trade, TradeSource
 
 
 def produce_trades(
     kafka_broker_address: str,
     kafka_topic: str,
-    product_id:str 
+    # product_id:str 
+    trade_data_source: TradeSource
 ):
     """ 
     Reads trades from the Kraken websocket API and saves them in the given `kafka_topic`
@@ -31,12 +32,14 @@ def produce_trades(
     topic = app.topic(name=kafka_topic, value_serializer='json')
 
     # Create a KrakenWebsocketAPI instance
-    kraken_api = KrakenWebsocketAPI(product_id=product_id)
+    # kraken_api = KrakenWebsocketAPI(product_id=product_id)
 
     # Create a Producer instance
     with app.get_producer() as producer:
-        while True:
-            trades: List[Trade] = kraken_api.get_trades()
+        # while True:
+        while not trade_data_source.is_done():
+            # trades: List[Trade] = kraken_api.get_trades()
+            trades: List[Trade] = trade_data_source.get_trades()
             for trade in trades:
                 # serialize the trade to a message and push it to the Kafka topic
                 message = topic.serialize(key=trade.product_id, value=trade.model_dump())
@@ -48,9 +51,12 @@ def produce_trades(
 if __name__ == "__main__":
     # broker address is specified in the redpanda yml file
     from src.config import config
+    from src.trade_data_source.kraken_websocket_api import KrakenWebsocketAPI
+    kraken_api = KrakenWebsocketAPI(product_id=config.product_id)
 
     produce_trades(
         kafka_broker_address=config.kafka_broker_address,
         kafka_topic=config.kafka_topic,
-        product_id=config.product_id
+        # product_id=config.product_id
+        trade_data_source=kraken_api,
     )
