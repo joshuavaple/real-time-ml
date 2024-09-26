@@ -14,3 +14,9 @@ run-live: build
 	 --network=redpanda_network \
 	 --env-file live.prod.env \
 	 trade-to-ohlc
+
+run-historical: build
+	docker run \
+	 --network=redpanda_network \
+	 --env-file historical.prod.env \
+	 trade-to-ohlc
