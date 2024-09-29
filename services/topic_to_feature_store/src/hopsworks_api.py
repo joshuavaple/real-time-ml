@@ -5,7 +5,7 @@ import pandas as pd
 
 
 def push_value_to_feature_group(
-        value: dict,
+        value: List[dict],
         feature_group_name: str,
         feature_group_version: int,
         feature_group_primary_keys: List[str],
@@ -16,7 +16,7 @@ def push_value_to_feature_group(
     Pushes a value to a given `feature_group_name` in the feature store.
 
     Args:
-        value (dict): Value to push to the feature store
+        value (List[dict]): Value to push to the feature store
         feature_group_name (str): Name of the feature group
         feature_group_version (int): Version of the feature group
         feature_group_primary_key (List[str]): List of primary key columns
@@ -44,7 +44,7 @@ def push_value_to_feature_group(
         # expectation_suite=expectation_suite_transactions,
     )
     # transform the value to a pandas df:
-    value_df = pd.DataFrame([value])
+    value_df = pd.DataFrame(value)
 
     # breakpoint()
     # feature_group.insert(value_df) # this action adds to both online and offline storage, sot it will be slower

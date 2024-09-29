@@ -14,7 +14,14 @@ Real Time ML Course
     * the config file
     * the Kraken websocket API class
 
-- [x] Build trade-to-ohlc service
+- [x] Build trade-to-ohlc (open-high-low-close) service (read-and-write)
 - [ ] Homework: 
     * Extract parameters
     * Dockerize the trade-to-ohlc service
+
+- [x] Topic to feature store service (Kafka consumer, read-only data from Kafka)
+- [ ] Start the backfill
+    - [x] Implement a Kraken Historical data reader (trade producer)
+    - [x] Adjust timestamps used to bucket trades into windows (trade to ohlc)
+    - [x] Save historical OHLC features in batches to the offline feature store (topic to feature store)
+

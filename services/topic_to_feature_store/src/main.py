@@ -13,6 +13,7 @@ def topic_to_feature_store(
     feature_group_primary_keys: List[str],
     feature_group_event_time: str,
     start_offline_materialization:bool,
+    batch_size:int,
     # feature store creds: TBU
 ):
     """ 
@@ -27,6 +28,7 @@ def topic_to_feature_store(
         feature_group_primary_keys (List[str]): List of primary key columns
         feature_group_event_time (str): Event time column
         start_offline_materialization (bool): Whether to store the data in offline storage as well when we save the `value` to the feature group
+        batch_size (int): Number of messages to accumulate to memory before writing to the feature store
 
     Returns:
         None
@@ -38,6 +40,8 @@ def topic_to_feature_store(
         auto_offset_reset='latest', # this arg is used to tell the consumer where to start reading messages from - from beginning of the topic or from the latest message
         consumer_group=kafka_consumer_group,
     )
+
+    batch = []
 
     # Create a consumer and start a polling loop
     with app.get_consumer() as consumer:
@@ -61,10 +65,20 @@ def topic_to_feature_store(
             import json
             value = json.loads(value.decode('utf-8'))
 
+            # Append the message to the batch
+            batch.append(value)
+
+            # If the batch is not full yet, continue polling
+            if len(batch) < batch_size:
+                logger.debug(f'Batch has length of {len(batch)} < {batch_size}. Continuing...')
+                continue
+
+            logger.debug(f'Batch has length of {len(batch)} >= {batch_size}. Pushing data to feature store...')
+
             # breakpoint()
             # now we need to push the value to the feature store
             push_value_to_feature_group(
-                value, 
+                batch, 
                 feature_group_name,
                 feature_group_version, 
                 feature_group_primary_keys,
@@ -72,6 +86,9 @@ def topic_to_feature_store(
                 start_offline_materialization,        
 
             )
+
+            # clear the batch
+            batch = []
 
             # Store the offset of the processed message on the Consumer 
             # for the auto-commit mechanism.
@@ -92,4 +109,5 @@ if __name__ == "__main__":
         feature_group_primary_keys=config.feature_group_primary_keys,
         feature_group_event_time=config.feature_group_event_time,
         start_offline_materialization=config.start_offline_materialization,
+        batch_size=config.batch_size
     )
