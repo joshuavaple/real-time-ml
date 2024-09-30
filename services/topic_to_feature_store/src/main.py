@@ -1,6 +1,6 @@
 from quixstreams import Application
 from loguru import logger
-from src.hopsworks_api import push_value_to_feature_group
+from src.hopsworks_api import push_value_to_feature_group, get_feature_store
 from typing import List
 
 
@@ -37,11 +37,14 @@ def topic_to_feature_store(
     # The config params will be used for the Consumer instance too.
     app = Application(
         broker_address=kafka_broker_address, 
-        auto_offset_reset='latest', # this arg is used to tell the consumer where to start reading messages from - from beginning of the topic or from the latest message
+        # auto_offset_reset='latest', # this arg is used to tell the consumer where to start reading messages from - from beginning of the topic or from the latest message
         consumer_group=kafka_consumer_group,
     )
 
+    feature_store = get_feature_store()
+
     batch = []
+    # breakpoint()
 
     # Create a consumer and start a polling loop
     with app.get_consumer() as consumer:
@@ -49,8 +52,6 @@ def topic_to_feature_store(
 
         while True:
             msg = consumer.poll(0.1) # how long to wait for messages in seconds
-
-            
 
             if msg is None:
                 continue
@@ -78,6 +79,7 @@ def topic_to_feature_store(
             # breakpoint()
             # now we need to push the value to the feature store
             push_value_to_feature_group(
+                feature_store,
                 batch, 
                 feature_group_name,
                 feature_group_version, 
@@ -100,7 +102,12 @@ def topic_to_feature_store(
 
 if __name__ == "__main__":
     from src.config import config
+    # app = init_app(
+    #     kafka_broker_address=config.kafka_broker_address,
+    #     kafka_consumer_group=config.kafka_consumer_group)
+
     topic_to_feature_store(
+        # app=app,
         kafka_broker_address=config.kafka_broker_address,
         kafka_input_topic=config.kafka_input_topic,
         kafka_consumer_group=config.kafka_consumer_group,

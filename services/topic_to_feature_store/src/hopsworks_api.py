@@ -4,7 +4,21 @@ from typing import List
 import pandas as pd
 
 
+def get_feature_store():
+    """
+    Initializes a connection to the Hopsworks feature store.
+    This is separated from the `push_value_to_feature_group` function.
+    This is to allow for re-use of the connection, and avoid constant disconnection and reconnection to the feature store.
+    """
+    project = hopsworks.login(
+        project = config.hopsworks_project_name,
+        api_key_value=config.hopsworks_api_key_value,
+    )
+    feature_store = project.get_feature_store()
+    return feature_store
+
 def push_value_to_feature_group(
+        feature_store,
         value: List[dict],
         feature_group_name: str,
         feature_group_version: int,
@@ -27,11 +41,12 @@ def push_value_to_feature_group(
         None
     """
     
-    project = hopsworks.login(
-        project = config.hopsworks_project_name,
-        api_key_value=config.hopsworks_api_key_value,
-    )
-    feature_store = project.get_feature_store()
+    # project = hopsworks.login(
+    #     project = config.hopsworks_project_name,
+    #     api_key_value=config.hopsworks_api_key_value,
+    # )
+    # feature_store = project.get_feature_store()
+
     # Get or create the 'transactions_fraud_batch_fg' feature group
     feature_group = feature_store.get_or_create_feature_group(
         name=feature_group_name,
