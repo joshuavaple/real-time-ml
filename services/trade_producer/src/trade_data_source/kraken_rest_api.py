@@ -107,10 +107,14 @@ class KrakenRestAPI(TradeSource):
             )
         else:
             # make the request to the Kraken REST API
-            response = requests.request('GET', url, headers=headers, data=payload)
+            try:
+                response = requests.request('GET', url, headers=headers, data=payload)
 
-            # parse string into dictionary
-            data = json.loads(response.text)
+                # parse string into dictionary
+                data = json.loads(response.text)
+            except requests.exceptions.ConnectionError as e:
+                logger.info(f'Connection error from Kraken: {e}. \nRetrying in 30 seconds...')
+                sleep(30)
 
             # TODO: Error handling
             # It can happen that we get an error response from KrakenRESTAP like the following:

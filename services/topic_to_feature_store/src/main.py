@@ -37,12 +37,12 @@ def topic_to_feature_store(
     # The config params will be used for the Consumer instance too.
     app = Application(
         broker_address=kafka_broker_address, 
-        # auto_offset_reset='latest', # this arg is used to tell the consumer where to start reading messages from - from beginning of the topic or from the latest message
+        auto_offset_reset='latest', # this arg is used to tell the consumer where to start reading messages from - from beginning of the topic or from the latest message
         consumer_group=kafka_consumer_group,
     )
 
     feature_store = get_feature_store()
-
+    # breakpoint()
     batch = []
     # breakpoint()
 
