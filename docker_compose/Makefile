@@ -6,8 +6,14 @@ stop-redpanda:
 
 start-feature-pipeline:
 	# docker compose -f feature_pipeline.yml up -d
-	docker compose -f feature_pipeline.yml build --no-cache
-	docker compose -f feature_pipeline.yml up -d
+	# docker compose -f feature_pipeline.yml build --no-cache
+	docker compose -f feature_pipeline.yml up --build -d
 
 stop-feature-pipeline:
 	docker compose -f feature_pipeline.yml down
+
+start-backfill-pipeline:
+	docker compose -f backfill_pipeline.yml up --build -d
+
+stop-backfill-pipeline:
+	docker compose -f backfill_pipeline.yml down
